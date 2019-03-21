@@ -21,13 +21,8 @@ def p_instructions(p):
 def p_instruction(p):
     """instruction : conditionInstruction
     | loopInstruction
-<<<<<<< HEAD
     | BREAK ';'
     | CONTINUE ';'
-=======
-    | BREAK
-    | CONTINUE
->>>>>>> aa0e83ac04d2fadc07a39a09cd758b832140c4dc
     | returnStatement
     | assignment
     | operationAndAssignment
@@ -155,17 +150,10 @@ def p_assignment(p):
     | matrixAssignment"""
 
 def p_operationAndAssignment(p):
-<<<<<<< HEAD
     """operationAndAssignment : ID ASSPLUS value ';'
     | ID ASSMINUS value ';'
     | ID ASSMUL value ';'
     | ID ASSDIVIDE value ';'"""
-=======
-    """operationAndAssignment : ID ASSPLUS value
-    | ID ASSMINUS value
-    | ID ASSMUL value
-    | ID ASSDIVIDE value"""
->>>>>>> aa0e83ac04d2fadc07a39a09cd758b832140c4dc
     pass
 
 
@@ -200,17 +188,10 @@ def p_logicalexpression(p):
     pass
 
 def p_returnStatement(p):
-<<<<<<< HEAD
     """returnStatement : RETURN number ';'"""
 
 def p_printInstruction(p):
     """printInstruction : PRINT value ';'"""
-=======
-    """returnStatement : RETURN number"""
-
-def p_printInstruction(p):
-    """printInstruction : PRINT value"""
->>>>>>> aa0e83ac04d2fadc07a39a09cd758b832140c4dc
 
 def p_value(p):
     """value : matrixType
