@@ -7,10 +7,119 @@ import ply.yacc as yacc
 tokens = scanner.tokens
 
 precedence = (
-   ("left", '+', '-', '.+', '.-'),
-   ("left", "*", "/", '.*', './')
+   ("left", '+', '-', 'DOTPLUS', 'DOTMINUS'),
+   ("left", "*", "/", 'DOTMUL', 'DOTDIVIDE')
 )
 
+def p_program(p):
+    """program : instructions"""
+
+def p_instructions(p):
+    """instructions : instruction instructions 
+    | instruction"""
+
+def p_instruction(p):
+    """instruction : conditionInstruction
+    | loopInstruction
+    | BREAK ';'
+    | CONTINUE ';'
+    | returnStatement
+    | assignment
+    | operationAndAssignment
+    | printInstruction
+    | blockInstruction"""
+
+def p_blockInstruction(p):
+    """blockInstruction : '{' instructions '}'"""
+
+#string
+
+def p_string(p):
+    """string : STRING"""
+    p[0] = p[1]
+
+def p_stringAssignment(p):
+    """stringAssignment : ID '=' stringExpression ';'"""
+    pass
+
+def p_stringExpression(p):
+    """stringExpression : ID
+    | string
+    | stringExpression '+' stringExpression"""
+    pass
+
+#number
+
+def p_number(p):
+    """number : INT 
+    | FLOAT"""
+    p[0] = p[1]
+
+def p_numberAssignment(p):
+    """numberAssignment : ID '=' numberExpression ';'"""
+
+def p_numberExpression(p):
+    """numberExpression : number
+    | ID
+    | '(' numberExpression ')'
+    | numberExpression '+' numberExpression
+    | numberExpression '-' numberExpression
+    | numberExpression '*' numberExpression
+    | numberExpression '/' numberExpression
+    | '-' numberExpression"""
+    pass
+
+#matrix
+
+def p_row(p):
+    """row : number ',' row
+    | number"""
+    if p.length == 2:
+        p[0] = [p[1]]
+    else:
+        p[0] = [p[1]] + p[3]
+
+def p_rows(p):
+    """rows : row ';' rows
+    | row"""
+    if p.length == 2:
+        p[0] = [p[1]]
+    else:
+        p[0] = [p[1]] + p[3]
+
+
+def p_matrix(p):
+    """matrix : '[' rows ']'
+    | EYE '(' INT ')'
+    | ZEROS '(' INT ')'
+    | ONES '(' INT ')'"""
+    if p.length == 4:
+        p[0] = p[2]
+    elif p[1] == 'eye':     #eye or EYE?
+        pass
+    elif p[1] == 'zeros':
+        pass
+    elif p[1] == 'ones':
+        pass
+
+def p_matrixAssignment(p):
+    """matrixAssignment : ID '=' matrixExpression ';'"""
+
+def p_matrixExpression(p):
+    """matrixExpression : matrixType '+' matrixType
+    | matrixType '-' matrixType
+    | matrixType '*' matrixType
+    | matrixType '/' matrixType
+    | matrixType DOTPLUS numberExpression
+    | matrixType DOTMINUS numberExpression
+    | matrixType DOTMUL numberExpression
+    | matrixType DOTDIVIDE numberExpression"""
+
+def p_matrixType(p):
+    """matrixType : matrix
+    | ID
+    | matrixExpression"""
+    pass
 
 def p_error(p):
     if p:
@@ -19,59 +128,74 @@ def p_error(p):
         print("Unexpected end of input")
 
 
-def p_artihmetic(p):
-    """expression : expression PLUS expression
-                  | expression MINUS expression
-                  | expression MUL expression
-                  | expression DIVIDE expression"""
-    if p[2] == '+'   : p[0] = p[1] + p[3]
-    elif p[2] == '-' : p[0] = p[1] - p[3]               
-    elif p[2] == '*' : p[0] = p[1] * p[3]                         
-    elif p[2] == '/' : p[0] = p[1] / p[3]
+# def p_artihmetic(p):
+#     """expression : expression '+' expression
+#                   | expression '-' expression
+#                   | expression '*' expression
+#                   | expression '/' expression
+#                   | '(' expression ')'
+#                   | number
+#                   | string
+#                   | matrix"""
+#     if p[1] == '('   : p[0] = p[2]
+#     elif p[2] == '+' : p[0] = p[1] + p[3]
+#     elif p[2] == '-' : p[0] = p[1] - p[3]               
+#     elif p[2] == '*' : p[0] = p[1] * p[3]                         
+#     elif p[2] == '/' : p[0] = p[1] / p[3]
+
+#sum up
+def p_assignment(p):
+    """assignment : stringAssignment
+    | numberAssignment
+    | matrixAssignment"""
+
+def p_operationAndAssignment(p):
+    """operationAndAssignment : ID ASSPLUS value ';'
+    | ID ASSMINUS value ';'
+    | ID ASSMUL value ';'
+    | ID ASSDIVIDE value ';'"""
+    pass
+
 
 def p_if(p):
-    """operation : IF logicalExpression LBR operations RBR ELSE LBR operations RBR 
-    | IF logicalExpression LBR operations RBR"""
-    if p.length > 6:
-        if p[2]: 
-            p[0] = p[4] 
-        else: 
-            p[0] = p[8]
-    else:
-        if p[2]: p[0] = p[4]
-
-def p_number(p):
-    """number : INT | FLOAT"""
-    p[0] = p[1]
-
-def p_string(p):
-    """string: STRING"""
-    p[0] = p[1]
+    """conditionInstruction : IF logicalExpression instruction ELSE instruction
+    | IF logicalExpression instruction"""
 
 def p_while(p):
-    """whileLoopOperation : WHILE logicalExpression LBR inLoopOperations RBR"""
+    """whileLoopInstruction : WHILE logicalExpression instruction"""
     p[0] = (p[2], p[4])
 
 def p_for(p):
-    """forLoopOperation: FOR logicalExpression LBR inLoopOperations RBR"""
+    """forLoopInstruction : FOR logicalExpression instruction"""
     p[0] = (p[2], p[4])
 
 def p_loopOperation(p):
-    """loopOperation: forLoopOperation | whileLoopOperation"""
+    """loopInstruction : forLoopInstruction 
+    | whileLoopInstruction"""
     pass
 
-def p_inLoopOperation(p):
-    """inLoopOperation: operation | BREAK | CONTINUE"""
+def p_logicaloperator(p):
+    """logicalOperator : LE 
+                        | GE 
+                        | NE 
+                        | EQ 
+                        | LT 
+                        | GT"""
     pass
 
-def p_inLoopOperations(p):
-    """inLoopOperations: """
+def p_logicalexpression(p):
+    """logicalExpression : number logicalOperator number"""
+    pass
 
-# to finish the grammar
-# ....
+def p_returnStatement(p):
+    """returnStatement : RETURN number ';'"""
 
+def p_printInstruction(p):
+    """printInstruction : PRINT value ';'"""
 
-    
-
+def p_value(p):
+    """value : matrixType
+    | numberExpression
+    | stringExpression"""
 
 parser = yacc.yacc()
