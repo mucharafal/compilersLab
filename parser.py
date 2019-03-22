@@ -2,6 +2,7 @@
 
 import scanner
 import ply.yacc as yacc
+import sys
 
 
 tokens = scanner.tokens
@@ -53,7 +54,7 @@ def p_stringExpression(p):
 def p_number(p):
     """number : INT 
     | FLOAT"""
-    p[0] = p[1]
+    # p[0] = p[1]
 
 def p_numberAssignment(p):
     """numberAssignment : ID '=' numberExpression ';'"""
@@ -74,18 +75,18 @@ def p_numberExpression(p):
 def p_row(p):
     """row : number ',' row
     | number"""
-    if p.length == 2:
-        p[0] = [p[1]]
-    else:
-        p[0] = [p[1]] + p[3]
+    # if p.length == 2:
+    #     p[0] = [p[1]]
+    # else:
+    #     p[0] = [p[1]] + p[3]
 
 def p_rows(p):
     """rows : row ';' rows
     | row"""
-    if p.length == 2:
-        p[0] = [p[1]]
-    else:
-        p[0] = [p[1]] + p[3]
+    # if p.length == 2:
+    #     p[0] = [p[1]]
+    # else:
+    #     p[0] = [p[1]] + p[3]
 
 
 def p_matrix(p):
@@ -93,17 +94,17 @@ def p_matrix(p):
     | EYE '(' INT ')'
     | ZEROS '(' INT ')'
     | ONES '(' INT ')'"""
-    if p.length == 4:
-        p[0] = p[2]
-    elif p[1] == 'eye':     #eye or EYE?
-        pass
-    elif p[1] == 'zeros':
-        pass
-    elif p[1] == 'ones':
-        pass
+    # if p.length == 4:
+    #     p[0] = p[2]
+    # elif p[1] == 'eye':     #eye or EYE?
+    #     pass
+    # elif p[1] == 'zeros':
+    #     pass
+    # elif p[1] == 'ones':
+    #     pass
 
 def p_matrixAssignment(p):
-    """matrixAssignment : ID '=' matrixExpression ';'"""
+    """matrixAssignment : ID '=' matrixType ';'"""
 
 def p_matrixExpression(p):
     """matrixExpression : matrixType '+' matrixType
@@ -113,7 +114,8 @@ def p_matrixExpression(p):
     | matrixType DOTPLUS numberExpression
     | matrixType DOTMINUS numberExpression
     | matrixType DOTMUL numberExpression
-    | matrixType DOTDIVIDE numberExpression"""
+    | matrixType DOTDIVIDE numberExpression
+    | matrixType '''"""
 
 def p_matrixType(p):
     """matrixType : matrix
@@ -123,7 +125,7 @@ def p_matrixType(p):
 
 def p_error(p):
     if p:
-        print("Syntax error at line {0}, column {1}: LexToken({2}, '{3}')".format(p.lineno, scanner.find_tok_column(p), p.type, p.value))
+        print("Syntax error at line {0}, column {1}: LexToken({2}, '{3}')".format(p.lineno, scanner.find_column(file_content, p), p.type, p.value))
     else:
         print("Unexpected end of input")
 
@@ -163,11 +165,11 @@ def p_if(p):
 
 def p_while(p):
     """whileLoopInstruction : WHILE logicalExpression instruction"""
-    p[0] = (p[2], p[4])
+    # p[0] = (p[2], p[4])
 
 def p_for(p):
     """forLoopInstruction : FOR logicalExpression instruction"""
-    p[0] = (p[2], p[4])
+    # p[0] = (p[2], p[4])
 
 def p_loopOperation(p):
     """loopInstruction : forLoopInstruction 
@@ -198,4 +200,8 @@ def p_value(p):
     | numberExpression
     | stringExpression"""
 
-parser = yacc.yacc()
+if __name__ == '__main__':
+    parser = yacc.yacc()
+    fh = open(sys.argv[1], "r")
+    file_content = fh.read()
+    parser.parse(file_content, scanner.lexer)

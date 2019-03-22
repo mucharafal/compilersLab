@@ -3,10 +3,12 @@ import ply.lex as lex
 import sys
 import ply.yacc as yacc
 
-tokens = (  'PLUS',  'MINUS',  'MUL',  'DIVIDE',
-	'DOTPLUS', 'DOTMINUS', 'DOTMUL', 'DOTDIVIDE', 'ASS', 'ASSPLUS', 'ASSMINUS', 'ASSMUL', 		'ASSDIVIDE', 'LT', 'GT', 'LE', 'GE', 'NE', 'EQ', 'LPAR', 'RPAR', 'LSQBR', 'RSQBR', 'LBR',
-	'RBR', 'RNG', 'TRANS', 'COMMA', 'SCOL', 'IF', 'ELSE', 'FOR', 'WHILE', 'BREAK', 'CONTINUE',
-	'RETURN', 'EYE', 'ZEROS', 'ONES', 'PRINT', 'ID', 'INT', 'FLOAT', 'STRING')
+tokens = (	'DOTPLUS', 'DOTMINUS', 'DOTMUL', 'DOTDIVIDE', 
+            'ASSPLUS', 'ASSMINUS', 'ASSMUL', 'ASSDIVIDE', 
+            'LT', 'GT', 'LE', 'GE', 'NE', 'EQ', 'IF', 'ELSE', 
+            'FOR', 'WHILE', 'BREAK', 'CONTINUE',
+	        'RETURN', 'EYE', 'ZEROS', 'ONES', 'PRINT', 'ID',
+            'INT', 'FLOAT', 'STRING')
 
 t_DOTPLUS = r'\.\+'
 t_DOTMINUS = r'\.\-'
@@ -22,21 +24,6 @@ t_NE = r'!='
 t_EQ = r'=='
 t_LT = r'<'
 t_GT = r'>'
-t_ASS = r'='
-t_PLUS    = r'\+'
-t_MINUS   = r'-'
-t_MUL   = r'\*'
-t_DIVIDE  = r'/'
-t_LPAR  = r'\('
-t_RPAR  = r'\)'
-t_LSQBR = r'\['
-t_RSQBR = r'\]'
-t_LBR = r'\{'
-t_RBR = r'\}'
-t_RNG = r'\:'
-t_TRANS = r'\''
-t_COMMA = r'\,'
-t_SCOL = r'\;'
 def t_IF(t):
     r'if'
     return t
@@ -71,7 +58,7 @@ def t_PRINT(t):
     r'print'
     return t
 
-literals = [ '+','-','*','/','(',')' ]
+literals = [ '+','-','*','/','(',')', '{', '}', '[', ']', ':', ';', '=', '\'' ]
 
 def t_FLOAT(t):
     r'((\d+\.\d*)|(\d*\.\d+))(E\d+)?'
@@ -109,8 +96,10 @@ def find_column(input, token):
     return (token.lexpos - line_start) + 1
 
 lexer = lex.lex()
-fh = open(sys.argv[1], "r")
-file_content = fh.read()
-lexer.input( file_content )
-for token in lexer:
-    print("line %d, column %d: %s(%s)" %(token.lineno, find_column(file_content, token), token.type, token.value))
+
+if __name__ == '__main__':
+    fh = open(sys.argv[1], "r")
+    file_content = fh.read()
+    lexer.input( file_content )
+    for token in lexer:
+        print("line %d, column %d: %s(%s)" %(token.lineno, find_column(file_content, token), token.type, token.value))
