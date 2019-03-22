@@ -70,6 +70,11 @@ def p_numberExpression(p):
     | '-' numberExpression"""
     pass
 
+def p_arrayType(p):
+    """arrayType : '[' row ']'
+    | numberExpression ':' numberExpression"""
+
+
 #matrix
 
 def p_row(p):
@@ -85,8 +90,8 @@ def p_rows(p):
     | bracketRows
     semicolonRows : row ';' rows
     | row
-    bracketRows : '[' row ']' ',' bracketRows
-    | '[' row ']'"""
+    bracketRows : arrayType ',' bracketRows
+    | arrayType"""
     # if p.length == 2:
     #     p[0] = [p[1]]
     # else:
@@ -165,14 +170,14 @@ def p_operationAndAssignment(p):
 
 def p_if(p):
     """conditionInstruction : IF '(' logicalExpression ')' instruction ELSE instruction
-    | IF logicalExpression instruction"""
+    | IF '(' logicalExpression ')' instruction"""
 
 def p_while(p):
     """whileLoopInstruction : WHILE '(' logicalExpression ')' instruction"""
     # p[0] = (p[2], p[4])
 
 def p_for(p):
-    """forLoopInstruction : FOR '(' logicalExpression ')' instruction"""
+    """forLoopInstruction : FOR ID '=' arrayType instruction"""
     # p[0] = (p[2], p[4])
 
 def p_loopOperation(p):
@@ -187,7 +192,6 @@ def p_logicaloperator(p):
                         | EQ 
                         | LT 
                         | GT"""
-    pass
 
 def p_logicalexpression(p):
     """logicalExpression : numberExpression logicalOperator numberExpression"""
@@ -197,7 +201,11 @@ def p_returnStatement(p):
     """returnStatement : RETURN numberExpression ';'"""
 
 def p_printInstruction(p):
-    """printInstruction : PRINT value ';'"""
+    """printInstruction : PRINT valuesToPrint ';'"""
+
+def p_valuesToPrint(p):
+    """valuesToPrint : value ',' valuesToPrint
+    | value"""
 
 def p_value(p):
     """value : matrixType
@@ -209,3 +217,5 @@ if __name__ == '__main__':
     fh = open(sys.argv[1], "r")
     file_content = fh.read()
     parser.parse(file_content, scanner.lexer)
+    # for p in parser.token:
+    #     print(p)
