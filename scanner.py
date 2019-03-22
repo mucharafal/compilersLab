@@ -6,7 +6,7 @@ import ply.yacc as yacc
 tokens = (	'DOTPLUS', 'DOTMINUS', 'DOTMUL', 'DOTDIVIDE', 
             'ASSPLUS', 'ASSMINUS', 'ASSMUL', 'ASSDIVIDE', 
             'LT', 'GT', 'LE', 'GE', 'NE', 'EQ', 'IF', 'ELSE', 
-            'FOR', 'WHILE', 'BREAK', 'CONTINUE',
+            'FOR', 'WHILE', 'BREAK', 'CONTINUE', 'TRANSPOSITION',
 	        'RETURN', 'EYE', 'ZEROS', 'ONES', 'PRINT', 'ID',
             'INT', 'FLOAT', 'STRING')
 
@@ -24,6 +24,7 @@ t_NE = r'!='
 t_EQ = r'=='
 t_LT = r'<'
 t_GT = r'>'
+t_TRANSPOSITION = r'\''
 def t_IF(t):
     r'if'
     return t
@@ -58,7 +59,7 @@ def t_PRINT(t):
     r'print'
     return t
 
-literals = [ '+','-','*','/','(',')', '{', '}', '[', ']', ':', ';', '=', '\'' ]
+literals = [ '+','-','*','/','(',')', '{', '}', '[', ']', ':', ';', '=', ',' ]
 
 def t_FLOAT(t):
     r'((\d+\.\d*)|(\d*\.\d+))(E\d+)?'

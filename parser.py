@@ -81,8 +81,12 @@ def p_row(p):
     #     p[0] = [p[1]] + p[3]
 
 def p_rows(p):
-    """rows : row ';' rows
-    | row"""
+    """rows : semicolonRows
+    | bracketRows
+    semicolonRows : row ';' rows
+    | row
+    bracketRows : '[' row ']' ',' bracketRows
+    | '[' row ']'"""
     # if p.length == 2:
     #     p[0] = [p[1]]
     # else:
@@ -115,7 +119,7 @@ def p_matrixExpression(p):
     | matrixType DOTMINUS numberExpression
     | matrixType DOTMUL numberExpression
     | matrixType DOTDIVIDE numberExpression
-    | matrixType '''"""
+    | matrixType TRANSPOSITION"""
 
 def p_matrixType(p):
     """matrixType : matrix
@@ -160,15 +164,15 @@ def p_operationAndAssignment(p):
 
 
 def p_if(p):
-    """conditionInstruction : IF logicalExpression instruction ELSE instruction
+    """conditionInstruction : IF '(' logicalExpression ')' instruction ELSE instruction
     | IF logicalExpression instruction"""
 
 def p_while(p):
-    """whileLoopInstruction : WHILE logicalExpression instruction"""
+    """whileLoopInstruction : WHILE '(' logicalExpression ')' instruction"""
     # p[0] = (p[2], p[4])
 
 def p_for(p):
-    """forLoopInstruction : FOR logicalExpression instruction"""
+    """forLoopInstruction : FOR '(' logicalExpression ')' instruction"""
     # p[0] = (p[2], p[4])
 
 def p_loopOperation(p):
@@ -186,11 +190,11 @@ def p_logicaloperator(p):
     pass
 
 def p_logicalexpression(p):
-    """logicalExpression : number logicalOperator number"""
+    """logicalExpression : numberExpression logicalOperator numberExpression"""
     pass
 
 def p_returnStatement(p):
-    """returnStatement : RETURN number ';'"""
+    """returnStatement : RETURN numberExpression ';'"""
 
 def p_printInstruction(p):
     """printInstruction : PRINT value ';'"""
