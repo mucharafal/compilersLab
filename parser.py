@@ -39,12 +39,8 @@ def p_string(p):
     """string : STRING"""
     p[0] = p[1]
 
-def p_stringAssignment(p):
-    """stringAssignment : ID '=' stringExpression ';'"""
-    pass
-
 def p_stringExpression(p):
-    """stringExpression : ID
+    """stringExpression : variable
     | string
     | stringExpression '+' stringExpression"""
     pass
@@ -56,12 +52,9 @@ def p_number(p):
     | FLOAT"""
     # p[0] = p[1]
 
-def p_numberAssignment(p):
-    """numberAssignment : ID '=' numberExpression ';'"""
-
 def p_numberExpression(p):
     """numberExpression : number
-    | ID
+    | variable
     | '(' numberExpression ')'
     | numberExpression '+' numberExpression
     | numberExpression '-' numberExpression
@@ -71,9 +64,9 @@ def p_numberExpression(p):
     pass
 
 def p_arrayType(p):
-    """arrayType : '[' row ']'
-    | numberExpression ':' numberExpression"""
-
+    """arrayExpression : '[' row ']'
+    | numberExpression ':' numberExpression
+    | variable"""
 
 #matrix
 
@@ -90,8 +83,8 @@ def p_rows(p):
     | bracketRows
     semicolonRows : row ';' rows
     | row
-    bracketRows : arrayType ',' bracketRows
-    | arrayType"""
+    bracketRows : arrayExpression ',' bracketRows
+    | arrayExpression"""
     # if p.length == 2:
     #     p[0] = [p[1]]
     # else:
@@ -112,8 +105,6 @@ def p_matrix(p):
     # elif p[1] == 'ones':
     #     pass
 
-def p_matrixAssignment(p):
-    """matrixAssignment : ID '=' matrixType ';'"""
 
 def p_matrixExpression(p):
     """matrixExpression : matrixType '+' matrixType
@@ -128,8 +119,8 @@ def p_matrixExpression(p):
 
 def p_matrixType(p):
     """matrixType : matrix
-    | ID
-    | matrixExpression"""
+    | variable
+    | matrixExpression""" # or variable instead ID
     pass
 
 def p_error(p):
@@ -155,18 +146,20 @@ def p_error(p):
 #     elif p[2] == '/' : p[0] = p[1] / p[3]
 
 #sum up
+def p_variable(p):
+    """variable : ID
+    | ID '[' numberExpression ']'
+    | ID '[' numberExpression ',' numberExpression ']'"""
+
 def p_assignment(p):
-    """assignment : stringAssignment
-    | numberAssignment
-    | matrixAssignment"""
+    """assignment : variable '=' expression ';'"""
 
 def p_operationAndAssignment(p):
-    """operationAndAssignment : ID ASSPLUS value ';'
-    | ID ASSMINUS value ';'
-    | ID ASSMUL value ';'
-    | ID ASSDIVIDE value ';'"""
+    """operationAndAssignment : variable ASSPLUS expression ';'
+    | variable ASSMINUS expression ';'
+    | variable ASSMUL expression ';'
+    | variable ASSDIVIDE expression ';'"""
     pass
-
 
 def p_if(p):
     """conditionInstruction : IF '(' logicalExpression ')' instruction ELSE instruction
@@ -177,7 +170,7 @@ def p_while(p):
     # p[0] = (p[2], p[4])
 
 def p_for(p):
-    """forLoopInstruction : FOR ID '=' arrayType instruction"""
+    """forLoopInstruction : FOR ID '=' arrayExpression instruction"""
     # p[0] = (p[2], p[4])
 
 def p_loopOperation(p):
@@ -204,13 +197,16 @@ def p_printInstruction(p):
     """printInstruction : PRINT valuesToPrint ';'"""
 
 def p_valuesToPrint(p):
-    """valuesToPrint : value ',' valuesToPrint
-    | value"""
+    """valuesToPrint : expression ',' valuesToPrint
+    | expression"""
 
-def p_value(p):
-    """value : matrixType
+def p_expression(p):
+    """expression : variable
+    | logicalExpression
+    | matrixType
     | numberExpression
-    | stringExpression"""
+    | stringExpression
+    | arrayExpression"""
 
 if __name__ == '__main__':
     parser = yacc.yacc()
