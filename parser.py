@@ -9,12 +9,13 @@ tokens = scanner.tokens
 
 precedence = (
    ("left", '+', '-', 'DOTPLUS', 'DOTMINUS'),
-   ("left", "*", "/", 'DOTMUL', 'DOTDIVIDE')
+   ("left", "*", "/", 'DOTMUL', 'DOTDIVIDE'),
+   ("left", "TRANSPOSITION")
 )
 
 def p_program(p):
     """program : instructions"""
-    p[0] = ('program', p[1])
+    print("p[1] = ", p[1])
 
 def p_instructions(p):
     """instructions : instruction instructions 
@@ -137,10 +138,10 @@ def p_matrixExpression(p):
     | matrixType '-' matrixType
     | matrixType '*' matrixType
     | matrixType '/' matrixType
-    | matrixType DOTPLUS numberExpression
-    | matrixType DOTMINUS numberExpression
-    | matrixType DOTMUL numberExpression
-    | matrixType DOTDIVIDE numberExpression
+    | matrixType DOTPLUS matrixType
+    | matrixType DOTMINUS matrixType
+    | matrixType DOTMUL matrixType
+    | matrixType DOTDIVIDE matrixType
     | matrixType TRANSPOSITION"""
     if len(p) == 3:
         p[0] = ('matrixExpression', p[1])
@@ -257,10 +258,5 @@ def p_expression(p):
     | arrayExpression"""
     p[0] = ('expression', p[1])
 
-if __name__ == '__main__':
-    parser = yacc.yacc()
-    fh = open(sys.argv[1], "r")
-    file_content = fh.read()
-    parser.parse(file_content, scanner.lexer)
-    # for p in parser.token:
-    #     print(p)
+
+parser = yacc.yacc()
