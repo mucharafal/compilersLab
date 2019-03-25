@@ -3,6 +3,7 @@
 import scanner
 import ply.yacc as yacc
 import sys
+import AST
 
 
 tokens = scanner.tokens
@@ -15,15 +16,16 @@ precedence = (
 
 def p_program(p):
     """program : instructions"""
-    print("p[1] = ", p[1])
+    p[0] = p[1]
 
 def p_instructions(p):
     """instructions : instruction instructions 
     | instruction"""
     if len(p) == 2:
-        p[0] = ('instructions', p[1])
+        p[0] = Block([p[1]])
     else:
-        p[0] = ('instructions', p[1], p[2])
+        p[0] = p[2]
+        p[2].body = [p[1]] + p[2].body
 
 def p_instruction(p):
     """instruction : conditionInstruction
@@ -35,32 +37,39 @@ def p_instruction(p):
     | operationAndAssignment
     | printInstruction
     | blockInstruction"""
-    p[0] = ('instruction', p[1])
+    if len(p) == 3:
+        p[0] = Jump(p[1])
+    else:
+        p[0] = p[1]
+
 
 def p_blockInstruction(p):
     """blockInstruction : '{' instructions '}'"""
-    p[0] = ('blockInstruction', p[2])
+    p[0] = p[2]
 #string
 
 def p_string(p):
     """string : STRING"""
-    p[0] = ('string', p[1])
+    p[0] = String(p[1])
 
 def p_stringExpression(p):
     """stringExpression : variable
     | string
     | stringExpression '+' stringExpression"""
     if len(p) == 2:
-        p[0] = ('stringExpression', p[1])
+        p[0] = p[1]
     else:
-        p[0] = ('stringExpression', p[2], p[1], p[3])
+        p[0] = BinExpr(p[2], p[1], p[3])
 
 #number
 
-def p_number(p):
-    """number : INT 
-    | FLOAT"""
-    p[0] = ('number', p[1])
+def p_int(p):
+    """number : INT """
+    p[0] = IntNum(p[1])
+
+def p_float(p):
+    """number : FLOAT"""
+    p[0] = FloatNum(p[1])
 
 def p_numberExpression(p):
     """numberExpression : number
@@ -72,20 +81,20 @@ def p_numberExpression(p):
     | numberExpression '/' numberExpression
     | '-' numberExpression"""
     if len(p) == 2:
-        p[0] = ('numberExpression', p[1])
+        p[0] = p[1]
     elif p[1] == '(':
-        p[0] = ('numberExpression', p[2])
+        p[0] = p[2]
     elif p[1] == '-':
-        p[0] = ('numberExpression', p[1], p[2])
+        p[0] = UnaryExpr(p[1], p[2])
     else:
-        p[0] = ('numberExpression', p[2], p[1], p[3])
+        p[0] = BinExpr(p[2], p[1], p[3])
 
 def p_arrayType(p):
     """arrayExpression : '[' row ']'
     | numberExpression ':' numberExpression
     | variable"""
     if len(p) == 2:
-        p[0] = ('arrayType', p[1])
+        p[0] = p[1]
     elif p[2] == ':':
         p[0] = ('arrayType', p[2], p[1], p[3])
     else:

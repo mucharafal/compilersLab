@@ -61,7 +61,7 @@ class BinExpr(Node):
 
 
 class UnaryExpr(Node):
-    def __init__(self, left, op):
+    def __init__(self, op, left):
         self.op = op
         self.left = left
 
@@ -76,6 +76,7 @@ class Print(Node):
 class Block(Node):
     def __init__(self,body):
         self.body = body
+
 
 class Error(Node):
     def __init__(self):
