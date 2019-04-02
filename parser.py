@@ -140,7 +140,7 @@ def p_matrix(p):
     if p[1] == '[':
         p[0] = Matrix(p[2])
     else:
-        p[0] = Matrix.specialFunction(p[1], p[3])
+        p[0] = Matrix((p[1], IntNum(p[3])))
 
 
 def p_matrixExpression(p):

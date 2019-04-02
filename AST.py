@@ -21,36 +21,22 @@ class Matrix(Node):
     def __init__(self, value):
         self.value = value
 
-    @staticmethod
-    def specialFunction(name, size):
-        matrix = []
-        if(name == 'eye'):
-            for i in range(0, size):
-                begin = [0] * i
-                end =  [0] * (size-i-1)
-                row = begin + [1] + end
-                matrix = matrix + [row]
-        elif(name == 'zeros'):
-            for i in range(0, size):
-                row = [0] * size
-                matrix = matrix + [row]
-        elif(name == 'ones'):
-            for i in range(0, size):
-                row = [1] * size
-                matrix = matrix + [row]
-        return Matrix(matrix)
-
 class Array(Node):
     @staticmethod
     def fromRange(begin, end):
-        return Array(list(range(begin, end)))
+        return Array((IntNum(begin), IntNum(end)))
 
     @staticmethod
     def fromList(contentList):
         return Array(contentList)
 
     def __init__(self, contentList):
-        self.list = contentList
+        if isinstance(contentList, list):
+            self.type = list
+            self.list = contentList
+        else:
+            self.type = range
+            self.boundary = contentList
 
 class While(Node):
     def __init__(self, cond, body):

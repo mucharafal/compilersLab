@@ -31,29 +31,39 @@ class TreePrinter:
     @addToClass(AST.Matrix)
     def printTree(self, indent=0):
         def printAsVector(potentialList, indentInner):
-            print(TreePrinter.makeIndent(indentInner) + "Array")
+            
             if isinstance(potentialList, list):
+                print(TreePrinter.makeIndent(indentInner) + "Array")
                 for i in potentialList:
                     printAsVector(i, indentInner+1)
             elif isinstance(potentialList, AST.Node):
-                potentialList.printTree(indentInner+1)
+                potentialList.printTree(indentInner)
             else:
                 print(TreePrinter.makeIndent(indentInner) + str(potentialList))
-        printAsVector(self.value, indent)
+        if isinstance(self.value, tuple):
+            print(TreePrinter.makeIndent(indent) + self.value[0])
+            self.value[1].printTree(indent+1)
+        else:
+            printAsVector(self.value, indent)
 
     @addToClass(AST.Array)
     def printTree(self, indent=0):
         def printAsVector(potentialList, indentInner):
-            print(TreePrinter.makeIndent(indentInner) + "Array")
+            
             if isinstance(potentialList, list):
+                print(TreePrinter.makeIndent(indentInner) + "Array")
                 for i in potentialList:
                     printAsVector(i, indentInner+1)
             elif isinstance(potentialList, AST.Node):
-                potentialList.printTree(indentInner+1)
+                potentialList.printTree(indentInner)
             else:
                 print(TreePrinter.makeIndent(indentInner) + str(potentialList))
-
-        printAsVector(self.list)
+        if isinstance(self.type, list):
+            printAsVector(self.list)
+        else:
+            print(TreePrinter.makeIndent(indent) + "Range")
+            self.boundary[0].printTree(indent+1)
+            self.boundary[1].printTree(indent+1)
 
     @addToClass(AST.BinaryExpression)
     def printTree(self, indent=0):
