@@ -24,7 +24,7 @@ class Matrix(Node):
 class Array(Node):
     @staticmethod
     def fromRange(begin, end):
-        return Array((IntNum(begin), IntNum(end)))
+        return Array((begin, end))
 
     @staticmethod
     def fromList(contentList):

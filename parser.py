@@ -209,7 +209,7 @@ def p_while(p):
 
 def p_for(p):
     """forLoopInstruction : FOR ID '=' arrayExpression instruction"""
-    p[0] = For(p[2], p[4], p[5])
+    p[0] = For(Variable(p[2]), p[4], p[5])
 
 def p_loopOperation(p):
     """loopInstruction : forLoopInstruction 
