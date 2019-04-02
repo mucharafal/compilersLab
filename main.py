@@ -1,10 +1,7 @@
+#!/bin/python3
 import scanner
 import parser
-import ply.yacc as yacc
-import ply.lex as lex
 import sys
-import AST as ast
-
 
 if __name__ == '__main__':
     parser = parser.parser

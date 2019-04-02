@@ -1,10 +1,10 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import scanner
 import ply.yacc as yacc
 import sys
-import AST
-
+from AST import *
+from TreePrinter import *
 
 tokens = scanner.tokens
 
@@ -59,7 +59,7 @@ def p_stringExpression(p):
     if len(p) == 2:
         p[0] = p[1]
     else:
-        p[0] = BinExpr(p[2], p[1], p[3])
+        p[0] = BinaryExpression(p[2], p[1], p[3])
 
 #number
 
@@ -85,9 +85,9 @@ def p_numberExpression(p):
     elif p[1] == '(':
         p[0] = p[2]
     elif p[1] == '-':
-        p[0] = UnaryExpr(p[1], p[2])
+        p[0] = UnaryExpression(p[1], p[2])
     else:
-        p[0] = BinExpr(p[2], p[1], p[3])
+        p[0] = BinaryExpression(p[2], p[1], p[3])
 
 def p_arrayType(p):
     """arrayExpression : '[' row ']'
@@ -96,39 +96,40 @@ def p_arrayType(p):
     if len(p) == 2:
         p[0] = p[1]
     elif p[2] == ':':
-        p[0] = ('arrayType', p[2], p[1], p[3])
+        p[0] = Array.fromRange(p[1], p[3])
     else:
-        p[0] = ('arrayType', p[2])
+        p[0] = Array.fromList(p[2])
+
 #matrix
 
 def p_row(p):
     """row : number ',' row
     | number"""
     if len(p) == 2:
-        p[0] = ('row', p[1])
+        p[0] = [p[1]]
     else:
-        p[0] = ('row', p[1], p[3])
+        p[0] = [p[1]] + p[3]
 
 def p_rows(p):
     """rows : semicolonRows
     | bracketRows"""
-    p[0] = ('rows', p[1])
+    p[0] = p[1]
 
 def p_semicolonRows(p):
     """semicolonRows : row ';' rows
     | row"""
     if len(p) == 2:
-        p[0] = ('semicolonRows', p[1])
+        p[0] = [p[1]]
     else:
-        p[0] = ('semicolonRows', p[1], p[3])
+        p[0] = [p[1]] +  p[3]
 
 def p_bracketRows(p):
     """bracketRows : arrayExpression ',' bracketRows
     | arrayExpression"""
     if len(p) == 2:
-        p[0] = ('bracketRows', p[1])
+        p[0] = [p[1].list]
     else:
-        p[0] = ('bracketRows', p[1], p[3])
+        p[0] = [p[1].list] +  p[3]
 
 
 def p_matrix(p):
@@ -137,9 +138,9 @@ def p_matrix(p):
     | ZEROS '(' INT ')'
     | ONES '(' INT ')'"""
     if p[1] == '[':
-        p[0] = ('matrix', p[2])
+        p[0] = Matrix(p[2])
     else:
-        p[0] = ('matrix', p[1], p[3])
+        p[0] = Matrix.specialFunction(p[1], p[3])
 
 
 def p_matrixExpression(p):
@@ -153,15 +154,15 @@ def p_matrixExpression(p):
     | matrixType DOTDIVIDE matrixType
     | matrixType TRANSPOSITION"""
     if len(p) == 3:
-        p[0] = ('matrixExpression', p[1])
+        p[0] = UnaryExpression(p[2], p[1])
     else:
-        p[0] = ('matrixExpression', p[2], p[1], p[3])
+        p[0] = BinaryExpression(p[2], p[1], p[3])
 
 def p_matrixType(p):
     """matrixType : matrix
     | variable
     | matrixExpression""" # or variable instead ID
-    p[0] = ('matrixType', p[1])
+    p[0] = p[1]
 
 def p_error(p):
     if p:
@@ -169,65 +170,51 @@ def p_error(p):
     else:
         print("Unexpected end of input")
 
-
-# def p_artihmetic(p):
-#     """expression : expression '+' expression
-#                   | expression '-' expression
-#                   | expression '*' expression
-#                   | expression '/' expression
-#                   | '(' expression ')'
-#                   | number
-#                   | string
-#                   | matrix"""
-#     if p[1] == '('   : p[0] = p[2]
-#     elif p[2] == '+' : p[0] = p[1] + p[3]
-#     elif p[2] == '-' : p[0] = p[1] - p[3]               
-#     elif p[2] == '*' : p[0] = p[1] * p[3]                         
-#     elif p[2] == '/' : p[0] = p[1] / p[3]
-
 #sum up
 def p_variable(p):
-    """variable : ID
-    | ID '[' numberExpression ']'
-    | ID '[' numberExpression ',' numberExpression ']'"""
-    if len(p) == 2:
-        p[0] = ('variable', p[1])
-    elif len(p) == 5:
-        p[0] = ('variable', p[1], p[3])
+    """variable : ID"""
+    p[0] = Variable(p[1])
+    
+def p_reference(p):
+    """reference : variable '[' numberExpression ']'
+    | variable '[' numberExpression ',' numberExpression ']'"""
+    if len(p) == 5:
+        p[0] = Reference(p[1], [p[3]])
     else:
-        p[0] = ('variable', p[1], p[3], p[5])
+        p[0] = Reference(p[1], [p[3], p[5]])
 
 def p_assignment(p):
-    """assignment : variable '=' expression ';'"""
-    p[0] = ('assignment', p[1], p[3])
+    """assignment : variable '=' expression ';'
+    | reference '=' expression ';'"""
+    p[0] = BinaryExpression(p[2], p[1], p[3])
 
 def p_operationAndAssignment(p):
     """operationAndAssignment : variable ASSPLUS expression ';'
     | variable ASSMINUS expression ';'
     | variable ASSMUL expression ';'
     | variable ASSDIVIDE expression ';'"""
-    p[0] = ('operationAndAssignment', p[1], p[3])
+    p[0] = BinaryExpression(p[2], p[1], p[3])
 
 def p_if(p):
     """conditionInstruction : IF '(' logicalExpression ')' instruction ELSE instruction
     | IF '(' logicalExpression ')' instruction"""
     if len(p) == 6:
-        p[0] = ('conditionInstruction', p[3], p[5])
+        p[0] = If(p[3], p[5])
     else:
-        p[0] = ('conditionInstrution', p[3], p[5], p[7])
+        p[0] = Else(p[3], p[5], p[7])
 
 def p_while(p):
     """whileLoopInstruction : WHILE '(' logicalExpression ')' instruction"""
-    p[0] = ('whileLoopInstruction', p[3], p[5])
+    p[0] = While(p[3], p[5])
 
 def p_for(p):
     """forLoopInstruction : FOR ID '=' arrayExpression instruction"""
-    p[0] = ('forLoopInstruction', p[2], p[4], p[5])
+    p[0] = For(p[2], p[4], p[5])
 
 def p_loopOperation(p):
     """loopInstruction : forLoopInstruction 
     | whileLoopInstruction"""
-    p[0] = ('loopOperation', p[1])
+    p[0] = p[1]
 
 def p_logicaloperator(p):
     """logicalOperator : LE 
@@ -236,27 +223,27 @@ def p_logicaloperator(p):
                         | EQ 
                         | LT 
                         | GT"""
-    p[0] = ('logicalOperator', p[1])
+    p[0] = p[1]
 
 def p_logicalexpression(p):
     """logicalExpression : numberExpression logicalOperator numberExpression"""
-    p[0] = ('logicalExpression', p[2], p[1], p[3])
+    p[0] = BinaryExpression(p[2], p[1], p[3])
 
 def p_returnStatement(p):
     """returnStatement : RETURN numberExpression ';'"""
-    p[0] = ('returnStatement', p[2])
+    p[0] = Return(p[2])
 
 def p_printInstruction(p):
     """printInstruction : PRINT valuesToPrint ';'"""
-    p[0] = ('printInstruction', p[2])
+    p[0] = Print(p[2])
 
 def p_valuesToPrint(p):
     """valuesToPrint : expression ',' valuesToPrint
     | expression"""
     if len(p) == 2:
-        p[0] = ('valuesToPrint', p[1])
+        p[0] = [p[1]]          #list
     else:
-        p[0] = ('valuesToPrint', p[1], p[3])
+        p[0] = [p[1]] + p[3]
 
 def p_expression(p):
     """expression : variable
@@ -264,8 +251,9 @@ def p_expression(p):
     | matrixType
     | numberExpression
     | stringExpression
-    | arrayExpression"""
-    p[0] = ('expression', p[1])
+    | arrayExpression
+    | reference"""
+    p[0] = p[1]
 
 
 parser = yacc.yacc()
