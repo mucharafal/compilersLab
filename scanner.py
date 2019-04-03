@@ -10,6 +10,7 @@ tokens = (	'DOTPLUS', 'DOTMINUS', 'DOTMUL', 'DOTDIVIDE',
 	        'RETURN', 'EYE', 'ZEROS', 'ONES', 'PRINT', 'ID',
             'INT', 'FLOAT', 'STRING')
 
+t_TRANSPOSITION = r'\''
 t_DOTPLUS = r'\.\+'
 t_DOTMINUS = r'\.\-'
 t_DOTMUL = r'\.\*'
@@ -24,7 +25,7 @@ t_NE = r'!='
 t_EQ = r'=='
 t_LT = r'<'
 t_GT = r'>'
-t_TRANSPOSITION = r'\''
+
 def t_IF(t):
     r'if'
     return t
@@ -62,7 +63,7 @@ def t_PRINT(t):
 literals = [ '+','-','*','/','(',')', '{', '}', '[', ']', ':', ';', '=', ',' ]
 
 def t_FLOAT(t):
-    r'((\d+\.\d*)|(\d*\.\d+))(E\d+)?'
+    r'((\d+\.\d*)|(\d*\.\d+))(-?E\d+)?'
     t.value = float(t.value)
     return t
 
@@ -89,7 +90,7 @@ def t_newline(t):
     t.lexer.lineno += len(t.value)
 
 def t_error(t) :
-    print "Illegal character '%s'" %t.value[0]
+    print("Illegal character '%s'" %t.value[0])
     t.lexer.skip(1)
 
 def find_column(input, token):
