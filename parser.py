@@ -9,8 +9,12 @@ from TreePrinter import *
 tokens = scanner.tokens
 
 precedence = (
-   ("left", '+', '-', 'DOTPLUS', 'DOTMINUS'),
-   ("left", "*", "/", 'DOTMUL', 'DOTDIVIDE'),
+   ("left", "LT", "GT", 'LE', 'GE', 'NE', 'EQ'),
+   ("left", "=", "ASSPLUS", 'ASSMINUS', 'ASSMUL', 'ASSDIVIDE'),
+   ("left", ':'),
+   ('left', 'DOTPLUS', 'DOTMINUS', 'DOTMUL', 'DOTDIVIDE'),
+   ("left", '+', '-'),
+   ("left", "*", "/"),
    ("left", "TRANSPOSITION")
 )
 
@@ -20,7 +24,7 @@ def p_program(p):
 
 def p_instructions(p):
     """instructions : instruction instructions 
-    | instruction"""
+    | instruction """
     if len(p) == 2:
         p[0] = Block([p[1]])
     else:
@@ -29,19 +33,23 @@ def p_instructions(p):
 
 def p_instruction(p):
     """instruction : conditionInstruction
-    | loopInstruction
-    | BREAK ';'
-    | CONTINUE ';'
-    | returnStatement
-    | assignment
-    | operationAndAssignment
-    | printInstruction
-    | blockInstruction"""
-    if len(p) == 3:
-        p[0] = Jump(p[1])
-    else:
-        p[0] = p[1]
+    | loopInstruction 
+    | instructionWSC ';'
+    | blockInstruction
+    """
+    p[0] = p[1]
 
+def p_instructionWithSemicolon(p):
+    """instructionWSC : jump
+    | returnStatement
+    | expression
+    | printInstruction"""
+    p[0] = p[1]
+
+def p_jump(p):
+    """jump : CONTINUE
+    | BREAK"""
+    p[0] = Jump(p[1])
 
 def p_blockInstruction(p):
     """blockInstruction : '{' instructions '}'"""
@@ -51,15 +59,6 @@ def p_blockInstruction(p):
 def p_string(p):
     """string : STRING"""
     p[0] = String(p[1])
-
-def p_stringExpression(p):
-    """stringExpression : variable
-    | string
-    | stringExpression '+' stringExpression"""
-    if len(p) == 2:
-        p[0] = p[1]
-    else:
-        p[0] = BinaryExpression(p[2], p[1], p[3])
 
 #number
 
@@ -71,28 +70,9 @@ def p_float(p):
     """number : FLOAT"""
     p[0] = FloatNum(p[1])
 
-def p_numberExpression(p):
-    """numberExpression : number
-    | variable
-    | '(' numberExpression ')'
-    | numberExpression '+' numberExpression
-    | numberExpression '-' numberExpression
-    | numberExpression '*' numberExpression
-    | numberExpression '/' numberExpression
-    | '-' numberExpression"""
-    if len(p) == 2:
-        p[0] = p[1]
-    elif p[1] == '(':
-        p[0] = p[2]
-    elif p[1] == '-':
-        p[0] = UnaryExpression(p[1], p[2])
-    else:
-        p[0] = BinaryExpression(p[2], p[1], p[3])
-
 def p_arrayType(p):
-    """arrayExpression : '[' row ']'
-    | numberExpression ':' numberExpression
-    | variable"""
+    """array : '[' row ']'
+    | expression ':' expression"""
     if len(p) == 2:
         p[0] = p[1]
     elif p[2] == ':':
@@ -124,8 +104,8 @@ def p_semicolonRows(p):
         p[0] = [p[1]] +  p[3]
 
 def p_bracketRows(p):
-    """bracketRows : arrayExpression ',' bracketRows
-    | arrayExpression"""
+    """bracketRows : array ',' bracketRows
+    | expression"""
     if len(p) == 2:
         p[0] = [p[1].list]
     else:
@@ -142,28 +122,6 @@ def p_matrix(p):
     else:
         p[0] = Matrix((p[1], IntNum(p[3])))
 
-
-def p_matrixExpression(p):
-    """matrixExpression : matrixType '+' matrixType
-    | matrixType '-' matrixType
-    | matrixType '*' matrixType
-    | matrixType '/' matrixType
-    | matrixType DOTPLUS matrixType
-    | matrixType DOTMINUS matrixType
-    | matrixType DOTMUL matrixType
-    | matrixType DOTDIVIDE matrixType
-    | matrixType TRANSPOSITION"""
-    if len(p) == 3:
-        p[0] = UnaryExpression(p[2], p[1])
-    else:
-        p[0] = BinaryExpression(p[2], p[1], p[3])
-
-def p_matrixType(p):
-    """matrixType : matrix
-    | variable
-    | matrixExpression""" # or variable instead ID
-    p[0] = p[1]
-
 def p_error(p):
     if p:
         print("Syntax error at line {0}, column {1}: LexToken({2}, '{3}')".format(p.lineno, scanner.find_column(file_content, p), p.type, p.value))
@@ -176,39 +134,27 @@ def p_variable(p):
     p[0] = Variable(p[1])
     
 def p_reference(p):
-    """reference : variable '[' numberExpression ']'
-    | variable '[' numberExpression ',' numberExpression ']'"""
+    """reference : variable '[' expression ']'
+    | variable '[' expression ',' expression ']'"""
     if len(p) == 5:
         p[0] = Reference(p[1], [p[3]])
     else:
         p[0] = Reference(p[1], [p[3], p[5]])
 
-def p_assignment(p):
-    """assignment : variable '=' expression ';'
-    | reference '=' expression ';'"""
-    p[0] = BinaryExpression(p[2], p[1], p[3])
-
-def p_operationAndAssignment(p):
-    """operationAndAssignment : variable ASSPLUS expression ';'
-    | variable ASSMINUS expression ';'
-    | variable ASSMUL expression ';'
-    | variable ASSDIVIDE expression ';'"""
-    p[0] = BinaryExpression(p[2], p[1], p[3])
-
 def p_if(p):
-    """conditionInstruction : IF '(' logicalExpression ')' instruction ELSE instruction
-    | IF '(' logicalExpression ')' instruction"""
+    """conditionInstruction : IF '(' expression ')' instruction ELSE instruction
+    | IF '(' expression ')' instruction"""
     if len(p) == 6:
         p[0] = If(p[3], p[5])
     else:
         p[0] = Else(p[3], p[5], p[7])
 
 def p_while(p):
-    """whileLoopInstruction : WHILE '(' logicalExpression ')' instruction"""
+    """whileLoopInstruction : WHILE '(' expression ')' instruction"""
     p[0] = While(p[3], p[5])
 
 def p_for(p):
-    """forLoopInstruction : FOR ID '=' arrayExpression instruction"""
+    """forLoopInstruction : FOR ID '=' array instruction"""
     p[0] = For(Variable(p[2]), p[4], p[5])
 
 def p_loopOperation(p):
@@ -225,16 +171,12 @@ def p_logicaloperator(p):
                         | GT"""
     p[0] = p[1]
 
-def p_logicalexpression(p):
-    """logicalExpression : numberExpression logicalOperator numberExpression"""
-    p[0] = BinaryExpression(p[2], p[1], p[3])
-
 def p_returnStatement(p):
-    """returnStatement : RETURN numberExpression ';'"""
+    """returnStatement : RETURN expression """
     p[0] = Return(p[2])
 
 def p_printInstruction(p):
-    """printInstruction : PRINT valuesToPrint ';'"""
+    """printInstruction : PRINT valuesToPrint """
     p[0] = Print(p[2])
 
 def p_valuesToPrint(p):
@@ -247,13 +189,55 @@ def p_valuesToPrint(p):
 
 def p_expression(p):
     """expression : variable
-    | logicalExpression
-    | matrixType
-    | numberExpression
-    | stringExpression
-    | arrayExpression
-    | reference"""
+    | matrix
+    | number
+    | string
+    | array
+    | reference
+    | binaryExpression
+    | unaryExpression
+    | '(' expression ')'"""
     p[0] = p[1]
 
+def p_binaryOperator(p):
+    """binaryOperator : logicalOperator
+    | arithmeticOperator
+    | assignmentOperator
+    | elementwiseOperator"""
+    p[0] = p[1]
+
+def p_artihmeticOperator(p):
+    """arithmeticOperator : '+'
+    | '-'
+    | '*'
+    | '/' """
+    p[0] = p[1]
+
+def p_assignmentOperator(p):
+    """assignmentOperator : '='
+    | ASSPLUS
+    | ASSMINUS 
+    | ASSMUL 
+    | ASSDIVIDE """
+    p[0] = p[1]
+
+def p_elementwiseOperator(p):
+    """elementwiseOperator : DOTPLUS
+    | DOTMINUS
+    | DOTMUL 
+    | DOTDIVIDE """
+    p[0] = p[1]
+
+def p_binaryExpression(p):
+    """binaryExpression : expression binaryOperator expression"""
+    p[0] = BinaryExpression(p[2], p[1], p[3])
+
+def p_unaryExpression(p):
+    """unaryExpression : '-' expression
+    | expression TRANSPOSITION """
+    if(p[2] == '\''):
+        p[0] = UnaryExpression(p[2], p[1])
+    else:
+        p[0] = UnaryExpression(p[1], p[2])
 
 parser = yacc.yacc()
