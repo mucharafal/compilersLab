@@ -70,15 +70,15 @@ def p_float(p):
     """number : FLOAT"""
     p[0] = FloatNum(p[1])
 
-def p_arrayType(p):
-    """array : '[' row ']'
-    | expression ':' expression"""
-    if len(p) == 2:
-        p[0] = p[1]
-    elif p[2] == ':':
-        p[0] = Array.fromRange(p[1], p[3])
+def p_matrix(p):
+    """matrix : '[' rows ']'
+    | EYE '(' expression ')'
+    | ZEROS '(' expression ')'
+    | ONES '(' expression ')'"""
+    if p[1] == '[':
+        p[0] = Matrix(p[2])
     else:
-        p[0] = Array.fromList(p[2])
+        p[0] = Matrix((p[1], p[3]))
 
 #matrix
 
@@ -111,16 +111,15 @@ def p_bracketRows(p):
     else:
         p[0] = [p[1].list] +  p[3]
 
-
-def p_matrix(p):
-    """matrix : '[' rows ']'
-    | EYE '(' INT ')'
-    | ZEROS '(' INT ')'
-    | ONES '(' INT ')'"""
-    if p[1] == '[':
-        p[0] = Matrix(p[2])
+def p_arrayType(p):
+    """array : '[' row ']'
+    | expression ':' expression"""
+    if len(p) == 2:
+        p[0] = p[1]
+    elif p[2] == ':':
+        p[0] = Array.fromRange(p[1], p[3])
     else:
-        p[0] = Matrix((p[1], IntNum(p[3])))
+        p[0] = Array.fromList(p[2])
 
 def p_error(p):
     if p:
