@@ -34,4 +34,10 @@ class SymbolTable(object):
     def popScope(self):
         return self.parent
 
+    def getAllScopes(self):
+        if self.parent == None:
+            return [self.name]
+        else:
+            return [self.name] + self.parent.getAllScopes()
+
 

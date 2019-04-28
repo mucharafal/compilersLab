@@ -9,11 +9,9 @@ if __name__ == '__main__':
     file_content = fh.read()
     parserFile.file_content = file_content
     parser = parserFile.parser
-        # for p in parser.token:
-        #     print(p)
-
     
     ast = parser.parse(file_content, lexer=scanner.lexer)
+    print(ast)
     ast.printTree()
 
     # Below code shows how to use visitor

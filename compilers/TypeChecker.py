@@ -39,6 +39,11 @@ class TypeChecker(NodeVisitor):
         type1 = self.visit(left)
         type2 = self.visit(right)
         
+        def artihmeticAllowed(type1, type2, operation):
+            return isinstance(type1, (Integer, Float)) and isinstance(type2, (Integer, Float)) or \
+                isinstance(type1, Matrix) and isinstance(type2, Matrix) or \
+                    isinstance(type1, String) and isinstance(type2, String) and operation == '+'
+
         #assignment
         if op == '=':
             if isinstance(left, (AST.Variable)):
@@ -47,7 +52,6 @@ class TypeChecker(NodeVisitor):
             elif isinstance(left, AST.Reference):
                 if not type(type1) is type(type2):
                     print("Assignment with bad type in reference" + str(type1) + str(type2))
-                
             else:
                 print("Assignment to nonvariable")
         #operation and assignment
@@ -55,7 +59,7 @@ class TypeChecker(NodeVisitor):
             if isinstance(left, AST.Variable):
                 if type(type1) == Variable:
                     print("Trying to operate on unassignment variable")
-                elif type(type1) == type(type2):
+                elif artihmeticAllowed(type1, type2, op[0]):
                     return type1
                 else:
                     print("Types in operation are wrong")
@@ -63,21 +67,22 @@ class TypeChecker(NodeVisitor):
                 print("Assignment to nonvariable")
         #matrix operations
         elif op == '.+' or op == '.-' or op == '.*' or op == './':
-            if type(type1) is type(type2):
+            if type(type1) is type(type2) and isinstance(type1, Matrix):
                 return type1
             else:
                 print("Incorrect types in operation " + op)
         #number operations
         elif op in ['+','-','*','/']:
-            if type(type1) is type(type2):
-                return type1
+            if artihmeticAllowed(type1, type2, op):
+                return type1 if not isinstance(type2, Float) else type2
             else:
                 print("Incorrect types in operation " + op)
+        #boolean or logical operations
         elif op in ['<', '>', '<=', '>=', '!=', '==']:
-            if type(type1) is type(type2):
-                return Boolean
+            if isinstance(type1, (Integer, Float)) and isinstance(type2, (Integer, Float)):
+                return Boolean()
             else:
-                print("Trying to compare diffrent types")
+                print("Trying to compare diffrent types:" + str(type1) + ";" + str(type2))
         else:
             print("Unexprected binary expression...")
         return None
@@ -85,6 +90,8 @@ class TypeChecker(NodeVisitor):
  
 
     def visit_Variable(self, node):
+        #return object Varible()- what means, that variable is unbounded
+        #or type of variable
         symbol = self.symbol_table.get(node.name)
         if symbol == None:
             return Variable()
@@ -102,16 +109,15 @@ class TypeChecker(NodeVisitor):
 
     def visit_UnaryExpression(self, node):
         type1 = self.visit(node.left)
-        print(type1)
-        if node.op == 'TRANSPOSITION':
+        if node.op == '\'':
             if isinstance(type1, Matrix):
                 return Matrix(type1.ySize, type1.xSize, type1.elementTypes)
             else:
-                print("Transposition on bad type")
+                print("Transposition on bad type:" + str(type1))
                 return None
         if type(type1) is Integer or type(type1) is Float or type(type1) is Matrix:
             return type1
-        print("Unary operation on bad type: " + node.op)
+        print("Unary operation on bad type: " + node.op + ";" + str(type1))
         return None
     
     def visit_Array(self, node):
@@ -128,9 +134,7 @@ class TypeChecker(NodeVisitor):
                 type1 = self.visit(head)
                 array_type = type1
                 for element in tail:
-                    if type1 == self.visit(element):
-                        pass
-                    else:
+                    if not type(type1) is type(self.visit(element)):
                         print("Inconsistent types in array")
             return Array(array_type, array_size)
 
@@ -138,8 +142,9 @@ class TypeChecker(NodeVisitor):
         content = node.value
         if isinstance(content, tuple):
             #function
-            functionName, size = content
-            type_of_size = self.visit(size)
+            functionName, sizeObj = content
+            size = sizeObj.value
+            type_of_size = self.visit(sizeObj)
             if not isinstance(type_of_size, Integer):
                 print("Incorrect argument of function: " + functionName)
                 return None
@@ -158,62 +163,57 @@ class TypeChecker(NodeVisitor):
 
     def visit_While(self, node):
         type_of_cond = self.visit(node.cond)
-        self.symbol_table.pushScope("loop")
+        self.symbol_table = self.symbol_table.pushScope("loop")             #loop is new scope for variables
         self.visit(node.body)
-        self.symbol_table.popScope()
-        if(isinstance(type_of_cond, Boolean)):
-            pass
-        else:
+        self.symbol_table = self.symbol_table.popScope()                    #get old variable scope
+        if not isinstance(type_of_cond, Boolean):
             print("Incorrect type in while condition")
         return Expression()
 
     def visit_For(self, node):
+        #check arguments of for
         type_of_array = self.visit(node.arr)
-        if isinstance(type_of_array, Array):
-            pass
-        else:
+        if not isinstance(type_of_array, Array):
             print("For need iterable")
-        if isinstance(node.var, AST.Variable):
-            pass
-        else:
+
+        if not isinstance(node.var, AST.Variable):
             print("Incorrect syntax in for")
-        #push new in SymbolTable
-        self.symbol_table.pushScope("loop")
-        self.symbol_table.put(node.var.name, VariableSymbol(node.var.name, type_of_array))
+        
+        self.symbol_table = self.symbol_table.pushScope("loop")             #push new variable scope
+        self.symbol_table.put(node.var.name, VariableSymbol(node.var.name, type_of_array.elementTypes)) #push variable to for scope
         self.visit(node.body)
-        self.symbol_table.popScope()
+        self.symbol_table = self.symbol_table.popScope()                    #get old variable scope
         return Expression()
     
     def visit_If(self, node):
         type_of_cond = self.visit(node.cond)
-        self.symbol_table.pushScope("if")
-        self.visit(node.body)
-        self.symbol_table.popScope()
-        if(isinstance(type_of_cond, Boolean)):
-            pass
-        else:
+        if not isinstance(type_of_cond, Boolean):
             print("Incorrect type in if condition")
+
+        self.symbol_table = self.symbol_table.pushScope("if")
+        self.visit(node.body)
+        self.symbol_table = self.symbol_table.popScope()
+
         return Expression()
 
     def visit_Else(self, node):
         type_of_cond = self.visit(node.cond)
-        self.symbol_table.pushScope("if")
-        self.visit(node.body1)
-        self.symbol_table.popScope()
-        self.symbol_table.pushScope("if")
-        self.visit(node.body2)
-        self.symbol_table.popScope()
-        if(isinstance(type_of_cond, Boolean)):
-            pass
-        else:
+        if not isinstance(type_of_cond, Boolean):
             print("Incorrect type in if condition")
+
+        self.symbol_table = self.symbol_table.pushScope("if")
+        self.visit(node.body1)
+        self.symbol_table = self.symbol_table.popScope()
+
+        self.symbol_table = self.symbol_table.pushScope("if")
+        self.visit(node.body2)
+        self.symbol_table = self.symbol_table.popScope()
+
         return Expression()
 
     def visit_Jump(self, node):
-        scope = self.symbol_table.name
-        if scope == "loop":
-            pass
-        else:
+        scopes = self.symbol_table.getAllScopes()
+        if not "loop" in scopes:
             print("Jump expression in incorrect place: " + node.type)
         return Expression()
 
@@ -250,12 +250,13 @@ class TypeChecker(NodeVisitor):
 
     def visit_Block(self, node):
         elements = node.body
+        self.symbol_table = self.symbol_table.pushScope("body")
         for element in elements:
             self.visit(element)
+        self.symbol_table = self.symbol_table.popScope()
         return Expression()
 
     def visit_list(self, node):
-        array_size = len(node)
         head, *tail = node
         array_type = self.visit(head)
         for element in tail:
