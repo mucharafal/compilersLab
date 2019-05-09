@@ -1,5 +1,6 @@
 class Node(object):
-    pass
+    def accept(self, visitor):
+        visitor.visit(self)
 
 class ValueNode(Node):
     pass
@@ -126,7 +127,7 @@ class Print(Node):
         self.column = column
 
 class Block(Node):
-    def __init__(self,body, line, column):
+    def __init__(self, body, line, column):
         self.body = body
         self.line = line
         self.column = column
