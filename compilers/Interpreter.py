@@ -147,7 +147,7 @@ class Interpreter(object):
     def visit(self, node):
         if node.type =="break":
             raise BreakException()
-        else
+        else:
             raise ContinueException
 
     @when(AST.Variable)
@@ -156,7 +156,11 @@ class Interpreter(object):
 
     @when(AST.Reference)
     def visit(self, node):
-        return self.memory.get(node.name[node.arguments])
+        var = self.memory.get(node.name)
+        if isinstance(var, list):
+            return var[node.arguments[0], node.arguments[1]]
+        else:
+            return var[node.arguments]
 
     @when(AST.Print)
     def visit(self, node):
