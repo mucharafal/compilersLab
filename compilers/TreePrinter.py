@@ -31,7 +31,6 @@ class TreePrinter:
     @addToClass(AST.Matrix)
     def printTree(self, indent=0):
         def printAsVector(potentialList, indentInner):
-            
             if isinstance(potentialList, list):
                 print(TreePrinter.makeIndent(indentInner) + "Array")
                 for i in potentialList:

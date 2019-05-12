@@ -94,8 +94,12 @@ def t_error(t) :
     t.lexer.skip(1)
 
 def find_column(input, token):
-    line_start = input.rfind('\n', 0, token.lexpos) + 1
-    return (token.lexpos - line_start) + 1
+    if type(token.lexpos) is int:
+        line_start = input.rfind('\n', 0, token.lexpos) + 1
+        return (token.lexpos - line_start) + 1
+    else:
+        line_start = input.rfind('\n', 0, token.lexer.lexpos) + 1
+        return (token.lexer.lexpos - line_start) + 1
 
 lexer = lex.lex()
 
