@@ -32,6 +32,12 @@ class Interpreter(object):
         matrixType = type(rawMatrix[0][0])
         return Matrix(x, y, matrixType, rawMatrix)
 
+    @staticmethod
+    def wrapArray(rawArray):
+        x = len(rawArray)
+        arrayType = type(rawArray[0])
+        return Array(arrayType, x, rawArray)
+
     @on('node')
     def visit(self, node):
         pass
@@ -76,7 +82,7 @@ class Interpreter(object):
         if operator == '=':
             self.memory.insert(node.left.name, right)
             return right
-        
+
 
     @when(AST.UnaryExpression)
     def visit(self, node):
@@ -100,9 +106,14 @@ class Interpreter(object):
 
     @when(AST.Matrix)
     def visit(self, node):
+        node.value.accept(self)
+        r2 = wrapMatrix(node.value)
+        return r2
 
     @when(AST.Array)
     def visit(self, node):
+        node.value.accept(self)
+        return wrapArray(node.value)
 
     @when(AST.While)
     def visit(self, node):
