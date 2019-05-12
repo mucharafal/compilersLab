@@ -77,11 +77,6 @@ class Interpreter(object):
             self.memory.insert(node.left.name, right)
             return right
         
-        
-
-            
-
-
 
     @when(AST.UnaryExpression)
     def visit(self, node):
@@ -102,6 +97,61 @@ class Interpreter(object):
         print("Interpret block")
         for expression in node.body:
             expression.accept(self)
+
+    @when(AST.Matrix)
+    def visit(self, node):
+
+    @when(AST.Array)
+    def visit(self, node):
+
+    @when(AST.While)
+    def visit(self, node):
+        result = None
+        while node.cond.accept(self):
+            result = node.while_block.accept(self)
+        return result
+
+    @when(AST.For)
+    def visit(self, node):
+        result = None
+        for i in node.range.accept(self):
+            self.memory_stack.insert(node.id, i)
+            result = node.for_block.accept(self)
+        return result
+
+    @when(AST.If)
+    def visit(self, node):
+        if node.cond.accept(self):
+            return node.if_block.accept(self)
+
+    @when(AST.Else)
+    def visit(self, node):
+        if node.cond.accept(self):
+            return node.if_block.accept(self)
+        else:
+            if node.else_block:
+                return node.else_block.accept(self)
+
+    @when(AST.Jump)
+    def visit(self, node):
+        if node.type =="break":
+            raise BreakException()
+        else
+            raise ContinueException
+
+    @when(AST.Variable)
+    def visit(self, node):
+        return self.memory.get(node.name)
+
+    @when(AST.Reference)
+    def visit(self, node):
+        return self.memory.get(node.name[node.arguments])
+
+    @when(AST.Print)
+    def visit(self, node):
+        return print(node.val)
+
+
 
         
 
