@@ -15,7 +15,7 @@ class Interpreter(object):
 
     @staticmethod
     def isNumber(number):
-        return number is Number
+        return isinstance(number, Number)
 
     @staticmethod
     def isMatrix(matrix):
@@ -40,15 +40,21 @@ class Interpreter(object):
 
     @on('node')
     def visit(self, node):
-        print("CO to")
         print(node)
         pass
 
     @when(AST.BinaryExpression)
     def visit(self, node):
-        print("Interpret bin expr")
+        
         left = node.left.accept(self)
         right = node.right.accept(self)
+        print("Interpret bin expr" + node.op)
+        print("left: " + str(left))
+        print("left: " + str(node.left))
+        if isinstance(node.left, AST.Variable):
+            print("zmienna: " + node.left.name)
+        print("right: " + str(right))
+        print("right: " + str(node.right))
         operator = node.op
         numberOperation = { 
             '+': lambda x, y: Number.wrap(x + y),
@@ -78,12 +84,12 @@ class Interpreter(object):
         }
         if operator in ['+', '-', '*', '/']:
             if Interpreter.isNumber(left):
-                return numberOperation[operator](left, right)
+                return numberOperation[operator](left.value, right.value)
             elif Interpreter.isMatrix(left):
                 return matrixOperation[operator](left, right)
         if operator in ['+=', '-=', '*=', '/=']:
             if Interpreter.isNumber(left):
-                value = numberOperation[operator[0]](left, right)
+                value = numberOperation[operator[0]](left.value, right.value)
                 self.memory.set(node.left.name, value)
                 return value
             elif Interpreter.isMatrix(left):
@@ -151,8 +157,10 @@ class Interpreter(object):
     @when(AST.Block)
     def visit(self, node):
         print("Interpret block")
+        self.memory.push(Memory("block"))
         for expression in node.body:
             expression.accept(self)
+        self.memory.pop()
 
     @when(AST.Matrix)
     def visit(self, node):
@@ -185,8 +193,21 @@ class Interpreter(object):
 
     @when(AST.Array)
     def visit(self, node):
-        node.value.accept(self)
-        return wrapArray(node.value)
+        if node.type is list:
+            values = []
+            for i in node.list:
+                values = values + [i.accept(self)]
+            return Array(type(values[0]), len(values), values)
+        else:
+            begin = node.boundary[0].accept(self)
+            end = node.boundary[1].accept(self)
+            rawValues = list(range(begin.value, end.value))
+            values = []
+            for i in rawValues:
+                values = values + [Number.wrap(i)]
+            return Array(type(values[0]), len(values), values)
+
+
 
     @when(AST.While)
     def visit(self, node):
@@ -204,10 +225,20 @@ class Interpreter(object):
 
     @when(AST.For)
     def visit(self, node):
-        result = None
-        for i in node.range.accept(self):
-            self.memory_stack.insert(node.id, i)
-            result = node.for_block.accept(self)
+        self.memory.push(Memory("for"))
+        self.memory.insert(node.var.name, None)
+        arr = node.arr.accept(self)
+        result = 0
+        try:
+            for i in arr.values:
+                self.memory.set(node.var.name, i)
+                try:
+                    result = node.body.accept(self)
+                except ContinueException:
+                    pass
+        except BreakException:
+            pass
+        self.memory.pop()
         return result
 
     @when(AST.If)
@@ -231,6 +262,8 @@ class Interpreter(object):
 
     @when(AST.Variable)
     def visit(self, node):
+        print("GET" + str(self.memory.get(node.name)))
+        print("Var name " + node.name)
         return self.memory.get(node.name)
 
     @when(AST.Reference)
