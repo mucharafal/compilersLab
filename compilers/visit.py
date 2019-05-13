@@ -43,7 +43,8 @@ class Dispatcher(object):
     typ = args[self.param_index].__class__
     d = self.targets.get(typ)
     if d is not None:
-      return d(*args, **kw)
+      res = d(*args, **kw)
+      return res
     else:
       issub = issubclass
       t = self.targets

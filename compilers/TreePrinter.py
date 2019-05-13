@@ -128,6 +128,7 @@ class TreePrinter:
     def printTree(self, indent=0):
         print(TreePrinter.makeIndent(indent) + "Print")
         for i in self.val:
+            print(i)
             i.printTree(indent+1)
 
     @addToClass(AST.Block)

@@ -19,7 +19,10 @@ class Memory:
 class MemoryStack:
     #contain list of memories                                                           
     def __init__(self, memory=None): # initialize memory stack with memory <memory>
-        self.stack = []
+        if memory == None:
+            self.stack = []
+        else:
+            self.stack = [memory]
         
     def get(self, name):             # gets from memory stack current value of variable <name>
         for memory in self.stack:

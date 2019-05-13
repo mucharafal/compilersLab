@@ -1,6 +1,6 @@
 class Node(object):
     def accept(self, visitor):
-        visitor.visit(self)
+        return visitor.visit(self)
 
 class ValueNode(Node):
     pass
