@@ -164,8 +164,6 @@ class Boolean():
 
     @staticmethod
     def greater(x, y):
-        print(x)
-        print(y)
         return Boolean(x.value > y.value)
 
     @staticmethod

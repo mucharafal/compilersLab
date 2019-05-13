@@ -48,13 +48,6 @@ class Interpreter(object):
         
         left = node.left.accept(self)
         right = node.right.accept(self)
-        print("Interpret bin expr" + node.op)
-        print("left: " + str(left))
-        print("left: " + str(node.left))
-        if isinstance(node.left, AST.Variable):
-            print("zmienna: " + node.left.name)
-        print("right: " + str(right))
-        print("right: " + str(node.right))
         operator = node.op
         numberOperation = { 
             '+': lambda x, y: Number.wrap(x + y),
@@ -129,7 +122,6 @@ class Interpreter(object):
     @when(AST.UnaryExpression)
     def visit(self, node):
         r1 = node.left.accept(self)
-        print(r1)
         op = node.op
         if op == '-':
             if Interpreter.isNumber(r1):
@@ -156,7 +148,6 @@ class Interpreter(object):
 
     @when(AST.Block)
     def visit(self, node):
-        print("Interpret block")
         self.memory.push(Memory("block"))
         for expression in node.body:
             expression.accept(self)
@@ -262,8 +253,6 @@ class Interpreter(object):
 
     @when(AST.Variable)
     def visit(self, node):
-        print("GET" + str(self.memory.get(node.name)))
-        print("Var name " + node.name)
         return self.memory.get(node.name)
 
     @when(AST.Reference)
@@ -283,15 +272,10 @@ class Interpreter(object):
         listValues = []
         for value in values:
             listValues = listValues + [value.accept(self)]
-    
+        toPrint = ""
         for value in listValues:
-            valType = type(value)
-            if valType is Integer or valType is Float or valType is String:
-                return print(value.value)
-            elif valType is Matrix or valType is Array:
-                return print(value.toString())
-            else:
-                raise TypeError(valType)
+            toPrint = toPrint + value.toString() + ", "
+        return print(toPrint)
 
     @when(AST.IntNum)
     def visit(self, node):

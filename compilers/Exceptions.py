@@ -12,3 +12,6 @@ class ContinueException(Exception):
 
 class MatrixIncompatibleException(Exception):
     pass
+
+class PrintException(Exception):
+    pass

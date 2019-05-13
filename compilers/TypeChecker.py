@@ -27,13 +27,15 @@ class NodeVisitor(object):
 
 
 
-class TypeChecker(NodeVisitor):
-    @staticmethod
-    def printPlace(node):
+class TypeChecker(NodeVisitor):  
+
+    def printPlace(self, node):
+        self.wasError = True
         print("Problem in line: " + str(node.line) + ", column: " + str(node.column))
 
     def __init__(self):
         self.symbol_table = SymbolTable(None, "main")
+        self.wasError = False
 
     def visit_BinaryExpression(self, node):
         op    = node.op
@@ -55,15 +57,18 @@ class TypeChecker(NodeVisitor):
             elif isinstance(left, AST.Reference):
                 if not type(type1) is type(type2):
                     self.printPlace(node)
+                    self.wasError = True
                     print("Assignment with bad type in reference" + str(type1) + str(type2))
             else:
                 self.printPlace(node)
+                self.wasError = True
                 print("Assignment to nonvariable")
         #operation and assignment
         elif op == '+=' or op == '-=' or op == '*=' or op == '/=':
             if isinstance(left, AST.Variable):
                 if type(type1) == Variable:
                     self.printPlace(node)
+                    self.wasError = True
                     print("Trying to operate on unassignment variable")
                 elif artihmeticAllowed(type1, type2, op[0]):
                     return type1
@@ -274,7 +279,11 @@ class TypeChecker(NodeVisitor):
         return Expression()
 
     def visit_Print(self, node):
-        self.visit(node.val)
+        import Exceptions
+        try:
+            self.visit(node.val)
+        except Exceptions.PrintException:
+            self.printPlace(node)
         return Expression()
 
     def visit_Block(self, node):
@@ -291,8 +300,10 @@ class TypeChecker(NodeVisitor):
         for element in tail:
             type_of_element = self.visit(element)
             if not type(array_type) is type(type_of_element):
-                self.printPlace(node)
+                self.wasError = True
                 print("Inconsistent types in array")
+                import Exceptions
+                raise Exceptions.PrintException()
         return Array(array_type, len(node))
 
 
