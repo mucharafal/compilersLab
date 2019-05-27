@@ -3,6 +3,7 @@ import scanner
 import parser as parserFile
 import sys
 from TypeChecker import TypeChecker
+from Interpreter import Interpreter
 
 if __name__ == '__main__':
     fh = open(sys.argv[1], "r")
@@ -17,4 +18,6 @@ if __name__ == '__main__':
     # Below code shows how to use visitor
     typeChecker = TypeChecker()   
     typeChecker.visit(ast)   # or alternatively ast.accept(typeChecker)
+    if not typeChecker.wasError:
+        ast.accept(Interpreter())
     
