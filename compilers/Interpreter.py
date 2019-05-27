@@ -141,10 +141,8 @@ class Interpreter(object):
 
     @when(AST.Return)
     def visit(self, node):
-        r1 = node.left.accept(self)
-        r2 = node.right.accept(self)
-        op = node.op
-        pass
+        value = node.expr.accept(self)
+        raise ReturnValueException(value)
 
     @when(AST.Block)
     def visit(self, node):

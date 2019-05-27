@@ -12,12 +12,13 @@ if __name__ == '__main__':
     parser = parserFile.parser
     
     ast = parser.parse(file_content, lexer=scanner.lexer)
-    print(ast)
-    ast.printTree()
+    # ast.printTree()
 
     # Below code shows how to use visitor
     typeChecker = TypeChecker()   
     typeChecker.visit(ast)   # or alternatively ast.accept(typeChecker)
     if not typeChecker.wasError:
         ast.accept(Interpreter())
+    else:
+        print("error occured")
     

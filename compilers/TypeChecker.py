@@ -62,7 +62,7 @@ class TypeChecker(NodeVisitor):
             else:
                 self.printPlace(node)
                 self.wasError = True
-                print("Assignment to nonvariable")
+                print("Assignment to nonvariable" + str(len(left.list)))
         #operation and assignment
         elif op == '+=' or op == '-=' or op == '*=' or op == '/=':
             if isinstance(left, AST.Variable):
@@ -143,7 +143,7 @@ class TypeChecker(NodeVisitor):
         if node.type == range:
             return Array(Integer(), 0)
         else:
-            content = node.contentList
+            content = node.list
             array_size = len(content)
             array_type = None
             if array_size == 0:
@@ -303,7 +303,7 @@ class TypeChecker(NodeVisitor):
                 self.wasError = True
                 print("Inconsistent types in array")
                 import Exceptions
-                raise Exceptions.PrintException()
+                # raise Exceptions.PrintException()
         return Array(array_type, len(node))
 
 

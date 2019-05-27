@@ -111,6 +111,19 @@ def p_bracketRows(p):
     else:
         p[0] = [p[1].list] +  p[3]
 
+def p_variable(p):
+    """variable : ID"""
+    p[0] = Variable(p[1], p.lineno if type(p.lineno) is int else p.lexer.lineno, scanner.find_column(file_content, p))
+    
+def p_reference(p):
+    """reference : variable '[' expression ']'
+    | variable '[' expression ',' expression ']'"""
+    if len(p) == 5:
+        p[0] = Reference(p[1], [p[3]], p.lineno if type(p.lineno) is int else p.lexer.lineno, scanner.find_column(file_content, p))
+    else:
+        p[0] = Reference(p[1], [p[3], p[5]], p.lineno if type(p.lineno) is int else p.lexer.lineno, scanner.find_column(file_content, p))
+
+
 def p_arrayType(p):
     """array : '[' row ']'
     | expression ':' expression"""
@@ -128,17 +141,6 @@ def p_error(p):
         print("Unexpected end of input")
 
 #sum up
-def p_variable(p):
-    """variable : ID"""
-    p[0] = Variable(p[1], p.lineno if type(p.lineno) is int else p.lexer.lineno, scanner.find_column(file_content, p))
-    
-def p_reference(p):
-    """reference : variable '[' expression ']'
-    | variable '[' expression ',' expression ']'"""
-    if len(p) == 5:
-        p[0] = Reference(p[1], [p[3]], p.lineno if type(p.lineno) is int else p.lexer.lineno, scanner.find_column(file_content, p))
-    else:
-        p[0] = Reference(p[1], [p[3], p[5]], p.lineno if type(p.lineno) is int else p.lexer.lineno, scanner.find_column(file_content, p))
 
 def p_if(p):
     """conditionInstruction : IF '(' expression ')' instruction ELSE instruction
