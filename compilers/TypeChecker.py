@@ -297,13 +297,6 @@ class TypeChecker(NodeVisitor):
     def visit_list(self, node):
         head, *tail = node
         array_type = self.visit(head)
-        for element in tail:
-            type_of_element = self.visit(element)
-            if not type(array_type) is type(type_of_element):
-                self.wasError = True
-                print("Inconsistent types in array")
-                import Exceptions
-                # raise Exceptions.PrintException()
         return Array(array_type, len(node))
 
 

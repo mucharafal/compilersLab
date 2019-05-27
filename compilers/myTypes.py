@@ -37,7 +37,7 @@ class Array():
 
     def toString(self):
         temp = []
-        for el in row:
+        for el in self.values:
             temp = temp + [el.toString()]
         return str(temp)
 
@@ -125,18 +125,18 @@ class Matrix():
     @staticmethod
     def multiply(first, second):
         if first.ySize == second.xSize:
-            resultRaw = []
+            resultRow = []
             for i in range(first.xSize):
                 temp = []
                 for j in range(second.ySize):
                     element = 0
                     for k in range(first.ySize):
-                        element = first.values[i][k].value * second.values[k][j].value
+                        element += first.values[i][k].value * second.values[k][j].value
 
                     element = Number.wrap(element)
                     temp = temp + [element]
-                resultRaw = resultRaw + [temp]
-            return Matrix(first.ySize, second.ySize, type(resultRaw[0][0]), resultRaw)
+                resultRow = resultRow + [temp]
+            return Matrix(first.ySize, second.ySize, type(resultRow[0][0]), resultRow)
         else:
             raise Exceptions.MatrixIncompatibleException()
 
